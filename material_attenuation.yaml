@@ -1,5 +1,7 @@
+# NIST X-Ray Mass Attenuation Coefficients mu/rho in cm^2/g
+# Density is in g/cm^3
 materials:
-  Al:
+  Al:  # aluminum
     density: 2.699
     energy_unit: MeV
     energies: [
@@ -17,7 +19,27 @@ materials:
       2.778E-01, 2.018E-01, 1.704E-01
     ]
 
-  C2H4:
+  Cu: # copper
+    density: 8.96
+    energy_unit: MeV
+    energies: [
+      1.000E-03, 1.047E-03, 1.096E-03, 1.096E-03,
+      1.500E-03, 2.000E-03, 3.000E-03, 4.000E-03,
+      5.000E-03, 6.000E-03, 8.000E-03, 8.979E-03,
+      8.979E-03, 1.000E-02, 1.500E-02, 2.000E-02,
+      3.000E-02, 4.000E-02, 5.000E-02, 6.000E-02,
+      8.000E-02, 1.000E-01
+    ]
+    mu_over_rho: [
+      1.057E+04, 9.333E+03, 8.245E+03, 9.345E+03,
+      4.418E+03, 2.154E+03, 7.488E+02, 3.473E+02,
+      1.899E+02, 1.156E+02, 5.255E+01, 3.829E+01,
+      2.783E+02, 2.160E+02, 7.405E+01, 3.380E+01,
+      1.091E+01, 4.862E+00, 2.613E+00, 1.593E+00,
+      7.630E-01, 4.585E-01
+    ]
+
+  C2H4:  # polyethylene
     density: 0.94
     energy_unit: MeV
     energies: [
