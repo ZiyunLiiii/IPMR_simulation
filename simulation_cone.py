@@ -83,7 +83,12 @@ plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     rod_radius=2.5,
     rod_centers=((-6.0, 0.0), (6.0, 0.0)),
 )
-mj.slice_viewer(plastic_mask, metal_mask)
+mj.slice_viewer(
+    plastic_mask,
+    metal_mask,
+    title='Cone Phantom Masks',
+    slice_label=['Plastic mask', 'Metal mask'],
+)
 
 mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
 mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
@@ -100,7 +105,7 @@ ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
 L_plastic = ct_model.forward_project(plastic_mask)   # shape (views, rows, channels)
 L_metal   = ct_model.forward_project(metal_mask)
 
-mj.slice_viewer(L_plastic, L_metal)
+# mj.slice_viewer(L_plastic, L_metal)
 
 # ============================================================
 # 5. Polychromatic forward model
@@ -120,7 +125,11 @@ for ie in range(len(energies_keV)):
 I = np.clip(I, 1e-8, None)
 sino_bh = -np.log(I / (I0 * spectrum.sum()))
 
-mj.slice_viewer(sino_bh, slice_axis=1)
+mj.slice_viewer(
+    sino_bh,
+    title='Cone Beam-Hardened Sinogram',
+    slice_axis=0,
+)
 
 # ============================================================
 # 6. Optional monochromatic comparison
@@ -142,4 +151,11 @@ FDK_bh = ct_model.direct_recon(sino_bh)
 recon_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=None)
 
 recon_mono, recon_dict_mono = ct_model.recon(sino_mono, weights=None)
-mj.slice_viewer(ground_truth, recon_mono, FDK_bh, recon_bh)
+mj.slice_viewer(
+    ground_truth,
+    recon_mono,
+    FDK_bh,
+    recon_bh,
+    title='Cone Reconstruction Comparison',
+    slice_label=['Ground truth', 'Mono reference', 'FDK', 'MBIR'],
+)

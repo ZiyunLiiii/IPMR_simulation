@@ -156,8 +156,20 @@ if segment_plastic:
     plastic_mask_fdk, _, _, _ = mjp.segment_plastic_metal(FDK_bh, num_metal=num_metal)
     plastic_mask_mbir, _, _, _  = mjp.segment_plastic_metal(mbir_bh, num_metal=num_metal)
     plastic_mask_mar, _, _, _  = mjp.segment_plastic_metal(recon_mar, num_metal=num_metal)
-    mj.slice_viewer(plastic_mask_fdk, plastic_mask_mbir, plastic_mask_mar)
+    mj.slice_viewer(
+        plastic_mask_fdk,
+        plastic_mask_mbir,
+        plastic_mask_mar,
+        title='Segmented Plastic Masks',
+        slice_label=['FDK plastic', 'MBIR plastic', 'MAR plastic'],
+    )
 
 if visualize_recon:
-    mj.slice_viewer(ground_truth, FDK_bh, mbir_bh, recon_mar)
-
+    mj.slice_viewer(
+        ground_truth,
+        FDK_bh,
+        mbir_bh,
+        recon_mar,
+        title='Cone MAR Reconstruction Comparison',
+        slice_label=['Ground truth', 'FDK', 'MBIR', 'MAR'],
+    )

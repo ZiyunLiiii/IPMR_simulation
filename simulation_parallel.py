@@ -140,4 +140,10 @@ ct_model.set_params(sharpness=0.0)
 
 recon_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=None)
 recon_mono, recon_dict_mono = ct_model.recon(sino_mono, weights=None)
-mj.slice_viewer(ground_truth, recon_bh, recon_mono)
+mj.slice_viewer(
+    ground_truth,
+    recon_bh,
+    recon_mono,
+    title='Parallel Reconstruction Comparison',
+    slice_label=['Ground truth', 'Beam-hardened MBIR', 'Mono reference'],
+)
