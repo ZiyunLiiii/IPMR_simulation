@@ -2,7 +2,7 @@ import numpy as np
 import mbirjax as mj
 import mbirjax.preprocess as mjp
 import yaml
-from utilities import gen_spectrum, get_material, align_energy_grid, generate_cylinder_rod_phantom, save_sinogram_gif
+import utilities
 
 
 # ============================================================
@@ -17,18 +17,18 @@ plastic_name = 'C2H4'
 tube_voltage = 90
 
 # NIST mass attenuation data in cm^2/g; density in g/cm^3
-E_metal_0, mu_over_rho_metal_0, rho_metal_0 = get_material(metal_name, config)
-E_plastic, mu_over_rho_plastic, rho_plastic = get_material(plastic_name, config)
+E_metal_0, mu_over_rho_metal_0, rho_metal_0 = utilities.get_material(metal_name, config)
+E_plastic, mu_over_rho_plastic, rho_plastic = utilities.get_material(plastic_name, config)
 
 # Generate X-ray spectrum weighting
-energies_keV, spectrum = gen_spectrum(tube_voltage, 'Al')
+energies_keV, spectrum = utilities.gen_spectrum(tube_voltage, 'Al')
 
 # Convert to attenuation in mm^{-1}
 mu_plastic_mm = rho_plastic * mu_over_rho_plastic / 10.0
 mu_metal_mm      = rho_metal_0 * mu_over_rho_metal_0 / 10.0
 
-mu_plastic_mm_interpolation = align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
-mu_metal_mm_interpolation = align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
+mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
+mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
 
 # ============================================================
 # 2. Geometry
@@ -65,7 +65,7 @@ nz = 256
 
 
 
-plastic_mask, metal_mask = generate_cylinder_rod_phantom(
+plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     nx=nx,
     ny=ny,
     nz=nz,
@@ -106,7 +106,7 @@ for ie in range(len(energies_keV)):
 # Normalize and take negative log
 I = np.clip(I, 1e-8, None)
 sino_bh = -np.log(I / (I0 * spectrum.sum()))
-save_sinogram_gif(sino_bh, "cone_sinogram.gif")
+utilities.save_sinogram_gif(sino_bh, "cone_sinogram.gif")
 
 # mj.slice_viewer(sino_bh, slice_axis=1)
 
@@ -142,11 +142,17 @@ recon_mar = mjp.recon_plastic_metal(
     gamma=gamma,
 )
 
-plastic_mask_fdk, metal_masks, plastic_scale, metal_scales = mjp.segment_plastic_metal(FDK_bh, num_metal=num_metal)
-plastic_mask_mbir, metal_masks, plastic_scale, metal_scales = mjp.segment_plastic_metal(mbir_bh, num_metal=num_metal)
-plastic_mask_mar, metal_masks, plastic_scale, metal_scales = mjp.segment_plastic_metal(recon_mar, num_metal=num_metal)
+segment_plastic = False
+visualize_recon = True
 
-mj.slice_viewer(FDK_bh, mbir_bh, recon_mar)
-mj.slice_viewer(plastic_mask_fdk, plastic_mask_mbir, plastic_mask_mar)
+if segment_plastic:
+    plastic_mask_fdk, _, _, _ = mjp.segment_plastic_metal(FDK_bh, num_metal=num_metal)
+    plastic_mask_mbir, _, _, _  = mjp.segment_plastic_metal(mbir_bh, num_metal=num_metal)
+    plastic_mask_mar, _, _, _  = mjp.segment_plastic_metal(recon_mar, num_metal=num_metal)
+    mj.slice_viewer(plastic_mask_fdk, plastic_mask_mbir, plastic_mask_mar)
+
+if visualize_recon:
+    mj.slice_viewer(FDK_bh, mbir_bh, recon_mar)
+
 
 

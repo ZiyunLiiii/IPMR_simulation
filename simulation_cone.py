@@ -1,7 +1,7 @@
 import numpy as np
 import mbirjax as mj
 import yaml
-from utilities import gen_spectrum, get_material, align_energy_grid, generate_cylinder_rod_phantom, save_sinogram_gif
+import utilities
 
 
 
@@ -17,18 +17,18 @@ plastic_name = 'C2H4'
 tube_voltage = 90
 
 # NIST mass attenuation data in cm^2/g; density in g/cm^3
-E_metal_0, mu_over_rho_metal_0, rho_metal_0 = get_material(metal_name, config)
-E_plastic, mu_over_rho_plastic, rho_plastic = get_material(plastic_name, config)
+E_metal_0, mu_over_rho_metal_0, rho_metal_0 = utilities.get_material(metal_name, config)
+E_plastic, mu_over_rho_plastic, rho_plastic = utilities.get_material(plastic_name, config)
 
 # Generate X-ray spectrum weighting
-energies_keV, spectrum = gen_spectrum(tube_voltage, 'Al')
+energies_keV, spectrum = utilities.gen_spectrum(tube_voltage, 'Al')
 
 # Convert to attenuation in mm^{-1}
 mu_plastic_mm = rho_plastic * mu_over_rho_plastic / 10.0
 mu_metal_mm      = rho_metal_0 * mu_over_rho_metal_0 / 10.0
 
-mu_plastic_mm_interpolation = align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
-mu_metal_mm_interpolation = align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
+mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
+mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
 
 # plt.plot(energies_keV, mu_metal_mm_interpolation, label='interpolated')
 # plt.plot(E_metal_0, mu_metal_mm, 'o', label='original')
@@ -71,7 +71,7 @@ nz = 256
 
 delta_voxel = 0.2
 
-plastic_mask, metal_mask = generate_cylinder_rod_phantom(
+plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     nx=nx,
     ny=ny,
     nz=nz,
