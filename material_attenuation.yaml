@@ -20,7 +20,7 @@ materials:
     ]
 
   Cu: # copper
-    density: 8.96
+    density: 8.960
     energy_unit: MeV
     energies: [
       1.000E-03, 1.047E-03, 1.096E-03, 1.096E-03,
@@ -58,7 +58,7 @@ materials:
     ]
 
   C2H4:  # polyethylene
-    density: 0.94
+    density: 0.930
     energy_unit: MeV
     energies: [
       1.000E-03, 1.500E-03, 2.000E-03, 3.000E-03,
