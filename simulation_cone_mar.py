@@ -28,7 +28,7 @@ energies_keV, spectrum, mean_E, std_E = utilities.gen_spectrum(tube_voltage, 'Al
 
 # Convert to attenuation in mm^{-1}
 mu_plastic_mm = rho_plastic * mu_over_rho_plastic / 10.0
-mu_metal_mm      = rho_metal_0 * mu_over_rho_metal_0 / 10.0
+mu_metal_mm = rho_metal_0 * mu_over_rho_metal_0 / 10.0
 
 mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
 mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
