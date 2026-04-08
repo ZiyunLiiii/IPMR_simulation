@@ -85,6 +85,10 @@ plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
 )
 mj.slice_viewer(plastic_mask, metal_mask)
 
+mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
+mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
+ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
+
 # ============================================================
 # 4. Forward-project material path lengths
 #
@@ -123,11 +127,10 @@ mj.slice_viewer(sino_bh, slice_axis=1)
 # ============================================================
 
 # Select reference mono energy
-target_energy_keV = mean_E
-E_mono_idx = np.argmin(np.abs(energies_keV - target_energy_keV))
-mono_energy_keV = energies_keV[E_mono_idx]
+mono_energy_keV = mean_E
+print(f"Using mean-energy attenuation at {mono_energy_keV:.3f} keV for ground truth.")
 
-mono_line_integral = mu_plastic_mm_interpolation[E_mono_idx] * L_plastic + mu_metal_mm_interpolation[E_mono_idx] * L_metal
+mono_line_integral = mu_plastic_eff * L_plastic + mu_metal_eff * L_metal
 sino_mono = mono_line_integral
 
 
@@ -139,4 +142,4 @@ FDK_bh = ct_model.direct_recon(sino_bh)
 recon_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=None)
 
 recon_mono, recon_dict_mono = ct_model.recon(sino_mono, weights=None)
-mj.slice_viewer(FDK_bh, recon_bh, recon_mono)
+mj.slice_viewer(ground_truth, recon_mono, FDK_bh, recon_bh)

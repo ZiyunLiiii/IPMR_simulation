@@ -79,6 +79,10 @@ plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
 )
 # mj.slice_viewer(plastic_mask, metal_mask)
 
+mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
+mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
+ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
+
 # ============================================================
 # 4. Forward-project material path lengths
 #
@@ -155,6 +159,5 @@ if segment_plastic:
     mj.slice_viewer(plastic_mask_fdk, plastic_mask_mbir, plastic_mask_mar)
 
 if visualize_recon:
-    mj.slice_viewer(FDK_bh, mbir_bh, recon_mar)
-
+    mj.slice_viewer(ground_truth, FDK_bh, mbir_bh, recon_mar)
 

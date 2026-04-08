@@ -108,6 +108,11 @@ def align_energy_grid(E_src, mu_src, E_ref):
     return mu_ref
 
 
+def get_effective_attenuation(E_src, mu_src, energy_keV):
+    """Evaluate attenuation at a single effective energy in keV."""
+    return float(align_energy_grid(E_src, mu_src, np.array([energy_keV], dtype=float))[0])
+
+
 def generate_cylinder_rod_phantom(
     nx=256,
     ny=256,
