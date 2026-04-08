@@ -1,6 +1,7 @@
 import numpy as np
 import mbirjax as mj
 import yaml
+from pathlib import Path
 import utilities
 
 
@@ -9,7 +10,9 @@ import utilities
 # 1. Load YAML file that contains material specifications
 #    Generate X-ray Spectrum
 # ============================================================
-with open("material_attenuation.yaml", "r") as f:
+repo_dir = Path(__file__).resolve().parent
+
+with open(repo_dir / "material_attenuation.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 metal_name = 'Al'

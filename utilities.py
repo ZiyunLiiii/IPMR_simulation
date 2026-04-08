@@ -5,12 +5,12 @@ from scipy.interpolate import interp1d
 from PIL import Image
 
 
-def gen_spectrum(energy, filter, plot=False):
+def gen_spectrum(energy, filter_material, plot=False):
     # -----------------------
     # Generate spectrum
     # -----------------------
     s = sp.Spek(kvp=energy, th=12)
-    s.filter(filter, 2.5)
+    s.filter(filter_material, 2.5)
 
     energies, spectrum = s.get_spectrum()
 

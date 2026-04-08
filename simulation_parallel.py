@@ -3,6 +3,7 @@ import mbirjax as mj
 import spekpy as sp
 import matplotlib.pyplot as plt
 import yaml
+from pathlib import Path
 from utilities import gen_spectrum, get_material, align_energy_grid, generate_cylinder_rod_phantom
 
 
@@ -11,7 +12,9 @@ from utilities import gen_spectrum, get_material, align_energy_grid, generate_cy
 # 1. Load YAML file that contains material specifications
 #    Generate X-ray Spectrum
 # ============================================================
-with open("material_attenuation.yaml", "r") as f:
+repo_dir = Path(__file__).resolve().parent
+
+with open(repo_dir / "material_attenuation.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 metal_name = 'Al'
