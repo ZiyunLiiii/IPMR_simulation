@@ -46,7 +46,7 @@ def gen_spectrum(energy, filter_material, plot=False):
         plt.grid(True, alpha=0.3)
         plt.tight_layout()
         plt.show()
-    return energies, weights
+    return energies, weights, mean_E, std_E
 
 
 
