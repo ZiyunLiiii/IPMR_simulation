@@ -20,3 +20,5 @@
 .pptx
 .ppt
 .npz
+__pycache__/
+*.pyc
