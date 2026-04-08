@@ -5,7 +5,7 @@ from scipy.interpolate import interp1d
 from PIL import Image
 
 
-def gen_spectrum(energy, filter):
+def gen_spectrum(energy, filter, plot=False):
     # -----------------------
     # Generate spectrum
     # -----------------------
@@ -33,21 +33,19 @@ def gen_spectrum(energy, filter):
 
     print(f"Mean energy = {mean_E:.3f} keV")
     print(f"Std energy  = {std_E:.3f} keV")
-    # -----------------------
-    # Plot
-    # -----------------------
-    plt.figure(figsize=(6,4))
-    plt.plot(energies, weights, linewidth=1.5)
+    if plot:
+        plt.figure(figsize=(6,4))
+        plt.plot(energies, weights, linewidth=1.5)
 
-    plt.xlabel('energy (keV)')
-    plt.ylabel('normalized weights')
-    plt.title('Normalized X-ray spectrum')
-    plt.xlim(0, 100)
-    plt.ylim(0, weights.max() * 1.1)
+        plt.xlabel('energy (keV)')
+        plt.ylabel('normalized weights')
+        plt.title('Normalized X-ray spectrum')
+        plt.xlim(0, 100)
+        plt.ylim(0, weights.max() * 1.1)
 
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    plt.show()
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plt.show()
     return energies, weights
 
 
