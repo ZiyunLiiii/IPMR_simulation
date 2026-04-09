@@ -13,13 +13,14 @@
 *.zip
 *.xrm
 *.txrm
-.npy
-.csv
-.docx
-.xlsx
-.pptx
-.ppt
-.npz
+*.npy
+*.npz
+*.csv
+*.docx
+*.xlsx
+*.ppt
+.idea
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
