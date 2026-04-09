@@ -52,6 +52,7 @@ num_det_channels = 256
 # Cone geometry requires source_detector_dist > source_iso_dist.
 source_detector_dist = 1024
 source_iso_dist = 512
+sharpness = 1.0
 
 angles = np.linspace(0, 2 * np.pi, num_views, endpoint=False, dtype=np.float32)
 
@@ -60,7 +61,7 @@ sino_shape = (num_views, num_det_rows, num_det_channels)
 
 # Use a cone-beam model with voxel size matched to the phantom definition.
 ct_model = mj.ConeBeamModel(sino_shape, angles, source_detector_dist, source_iso_dist)
-ct_model.set_params(delta_voxel=0.2, sharpness=0.0)
+ct_model.set_params(delta_voxel=0.2, sharpness=sharpness)
 
 
 # ============================================================

@@ -50,6 +50,7 @@ num_views = 360
 num_det_rows = 1
 num_det_channels = 256
 delta_voxel = 0.2
+sharpness = 1.0
 
 angles = np.linspace(0, np.pi, num_views, endpoint=False, dtype=np.float32)
 
@@ -58,7 +59,7 @@ sino_shape = (num_views, num_det_rows, num_det_channels)
 
 # Start with parallel beam for simplicity
 ct_model = mj.ParallelBeamModel(sino_shape, angles)
-ct_model.set_params(delta_voxel=delta_voxel, sharpness=0.0)
+ct_model.set_params(delta_voxel=delta_voxel, sharpness=sharpness)
 
 
 # ============================================================

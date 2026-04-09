@@ -46,6 +46,7 @@ num_det_channels = 256
 source_detector_dist = 1024
 source_iso_dist = 512
 delta_voxel = 0.2
+sharpness = 1.0
 
 angles = np.linspace(0, 2 * np.pi, num_views, endpoint=False, dtype=np.float32)
 
@@ -54,7 +55,7 @@ sino_shape = (num_views, num_det_rows, num_det_channels)
 
 # Use a cone-beam model with voxel size matched to the phantom definition.
 ct_model = mj.ConeBeamModel(sino_shape, angles, source_detector_dist, source_iso_dist)
-ct_model.set_params(delta_voxel=delta_voxel, sharpness=0.0)
+ct_model.set_params(delta_voxel=delta_voxel, sharpness=sharpness)
 
 
 # ============================================================
@@ -122,7 +123,6 @@ FDK_bh = ct_model.direct_recon(sino_bh)
 mbir_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=weights_trans)
 
 # MAR parameters
-sharpness = 1.0
 order = 3
 verbose = 1
 num_metal = 1
@@ -140,7 +140,7 @@ recon_mar = mjp.recon_plastic_metal(
     verbose=1,
     alpha=alpha,
     beta=beta,
-    gamma=gamma,
+    gamma=gamma
 )
 
 segment_plastic = False
