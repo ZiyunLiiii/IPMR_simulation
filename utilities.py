@@ -113,6 +113,31 @@ def get_effective_attenuation(E_src, mu_src, energy_keV):
     return float(align_energy_grid(E_src, mu_src, np.array([energy_keV], dtype=float))[0])
 
 
+def generate_polychromatic_sinogram(
+    plastic_path_length,
+    mu_plastic_interpolation,
+    metal_path_lengths,
+    metal_mu_interpolations,
+    spectrum,
+    I0=1.0,
+):
+    """Generate a beam-hardened sinogram for one plastic material and any number of metals."""
+
+    if len(metal_path_lengths) != len(metal_mu_interpolations):
+        raise ValueError("metal_path_lengths and metal_mu_interpolations must have the same length.")
+
+    I = np.zeros_like(plastic_path_length, dtype=np.float32)
+
+    for ie in range(len(spectrum)):
+        line_integral = mu_plastic_interpolation[ie] * plastic_path_length
+        for L_metal, mu_metal_interpolation in zip(metal_path_lengths, metal_mu_interpolations):
+            line_integral += mu_metal_interpolation[ie] * L_metal
+        I += spectrum[ie] * np.exp(-line_integral)
+
+    I = np.clip(I, 1e-8, None)
+    return -np.log(I / (I0 * spectrum.sum()))
+
+
 def generate_cylinder_rod_phantom(
     nx=256,
     ny=256,

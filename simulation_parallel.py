@@ -4,8 +4,7 @@ import spekpy as sp
 import matplotlib.pyplot as plt
 import yaml
 from pathlib import Path
-from utilities import gen_spectrum, get_material, align_energy_grid, generate_cylinder_rod_phantom, get_effective_attenuation
-
+import utilities
 
 
 # ============================================================
@@ -22,18 +21,18 @@ plastic_name = 'C2H4'
 tube_voltage = 90
 
 # NIST mass attenuation data in cm^2/g; density in g/cm^3
-E_metal_0, mu_over_rho_metal_0, rho_metal_0 = get_material(metal_name, config)
-E_plastic, mu_over_rho_plastic, rho_plastic = get_material(plastic_name, config)
+E_metal_0, mu_over_rho_metal_0, rho_metal_0 = utilities.get_material(metal_name, config)
+E_plastic, mu_over_rho_plastic, rho_plastic = utilities.get_material(plastic_name, config)
 
 # Generate X-ray spectrum weighting
-energies_keV, spectrum, mean_E, std_E = gen_spectrum(tube_voltage, 'Al')
+energies_keV, spectrum, mean_E, std_E = utilities.gen_spectrum(tube_voltage, 'Al')
 
 # Convert to attenuation in mm^{-1}
 mu_plastic_mm = rho_plastic * mu_over_rho_plastic / 10.0
 mu_metal_mm = rho_metal_0 * mu_over_rho_metal_0 / 10.0
 
-mu_plastic_mm_interpolation = align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
-mu_metal_mm_interpolation = align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
+mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
+mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
 
 # plt.plot(energies_keV, mu_metal_mm_interpolation, label='interpolated')
 # plt.plot(E_metal_0, mu_metal_mm, 'o', label='original')
@@ -71,7 +70,7 @@ nz = 1
 
 delta_voxel = 0.2
 
-plastic_mask, metal_mask = generate_cylinder_rod_phantom(
+plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     nx=nx,
     ny=ny,
     nz=nz,
@@ -81,8 +80,8 @@ plastic_mask, metal_mask = generate_cylinder_rod_phantom(
     rod_centers=((-6.0, 0.0), (6.0, 0.0)),
 )
 
-mu_plastic_eff = get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
-mu_metal_eff = get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
+mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
+mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
 ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
 
 
@@ -102,19 +101,13 @@ L_metal   = ct_model.forward_project(metal_mask)[:, 0, :]   * delta_voxel
 # 5. Polychromatic forward model
 # ============================================================
 
-# Incident intensity
-I0 = 1.0
-
-# Accumulate transmitted intensity
-I = np.zeros_like(L_plastic, dtype=np.float32)
-
-for ie in range(len(energies_keV)):
-    line_integral = mu_plastic_mm_interpolation[ie] * L_plastic + mu_metal_mm_interpolation[ie] * L_metal
-    I += spectrum[ie] * np.exp(-line_integral)
-
-# Normalize and take negative log
-I = np.clip(I, 1e-8, None)
-sino_bh_2d = -np.log(I / (I0 * spectrum.sum()))
+sino_bh_2d = utilities.generate_polychromatic_sinogram(
+    plastic_path_length=L_plastic,
+    mu_plastic_interpolation=mu_plastic_mm_interpolation,
+    metal_path_lengths=[L_metal],
+    metal_mu_interpolations=[mu_metal_mm_interpolation],
+    spectrum=spectrum,
+)
 
 # Add detector row dimension back: (views, rows, channels)
 sino_bh = sino_bh_2d[:, None, :]

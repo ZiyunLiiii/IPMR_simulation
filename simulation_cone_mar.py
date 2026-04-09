@@ -100,19 +100,13 @@ L_metal   = ct_model.forward_project(metal_mask)
 # 5. Polychromatic forward model
 # ============================================================
 
-# Incident intensity
-I0 = 1.0
-
-# Accumulate transmitted intensity
-I = np.zeros_like(L_plastic, dtype=np.float32)
-
-for ie in range(len(energies_keV)):
-    line_integral = mu_plastic_mm_interpolation[ie] * L_plastic + mu_metal_mm_interpolation[ie] * L_metal
-    I += spectrum[ie] * np.exp(-line_integral)
-
-# Normalize and take negative log
-I = np.clip(I, 1e-8, None)
-sino_bh = -np.log(I / (I0 * spectrum.sum()))
+sino_bh = utilities.generate_polychromatic_sinogram(
+    plastic_path_length=L_plastic,
+    mu_plastic_interpolation=mu_plastic_mm_interpolation,
+    metal_path_lengths=[L_metal],
+    metal_mu_interpolations=[mu_metal_mm_interpolation],
+    spectrum=spectrum,
+)
 utilities.save_sinogram_gif(sino_bh, "cone_sinogram.gif")
 
 # mj.slice_viewer(sino_bh, slice_axis=1)
