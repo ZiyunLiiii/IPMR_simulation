@@ -70,7 +70,6 @@ nx = 256
 ny = 256
 nz = 1
 
-delta_voxel = 0.2
 
 plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     nx=nx,
