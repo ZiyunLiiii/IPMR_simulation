@@ -1,11 +1,9 @@
 import numpy as np
 import mbirjax as mj
-import spekpy as sp
-import matplotlib.pyplot as plt
 import yaml
 from pathlib import Path
 import utilities
-from simulation_cone_mar import delta_voxel
+
 
 # ============================================================
 # 1. Load YAML file that contains material specifications
