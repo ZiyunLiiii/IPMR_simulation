@@ -12,8 +12,12 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Example:
+Examples:
 
 ```bash
-python simulation_cone_mar.py
+python run_single_metal.py
+python run_two_metal.py
 ```
+
+`run_single_metal.py` currently supports `PHANTOM_NAME = "two_rods"` or `PHANTOM_NAME = "ring_rods"`.
+`run_two_metal.py` currently supports `PHANTOM_NAME = "six_rods"`.
