@@ -1,10 +1,11 @@
 import numpy as np
 import mbirjax as mj
+import mbirjax.preprocess as mjp
 import yaml
 from pathlib import Path
 import utilities
 
-
+# This is a script that creates and reconstructs a single-metal, multi-rod CBCT phantom with metal artifacts.
 
 # ============================================================
 # 1. Load YAML file that contains material specifications
@@ -33,13 +34,6 @@ mu_metal_mm = rho_metal_0 * mu_over_rho_metal_0 / 10.0
 mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
 mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
 
-# plt.plot(energies_keV, mu_metal_mm_interpolation, label='interpolated')
-# plt.plot(E_metal_0, mu_metal_mm, 'o', label='original')
-# plt.legend()
-# plt.xscale('log')
-# plt.yscale('log')
-# plt.show()
-
 # ============================================================
 # 2. Geometry
 #    Following the demo pattern: create angles and MBIRJAX model
@@ -52,6 +46,7 @@ num_det_channels = 256
 # Cone geometry requires source_detector_dist > source_iso_dist.
 source_detector_dist = 1024
 source_iso_dist = 512
+delta_voxel = 0.2
 sharpness = 1.0
 
 angles = np.linspace(0, 2 * np.pi, num_views, endpoint=False, dtype=np.float32)
@@ -61,7 +56,7 @@ sino_shape = (num_views, num_det_rows, num_det_channels)
 
 # Use a cone-beam model with voxel size matched to the phantom definition.
 ct_model = mj.ConeBeamModel(sino_shape, angles, source_detector_dist, source_iso_dist)
-ct_model.set_params(delta_voxel=0.2, sharpness=sharpness)
+ct_model.set_params(delta_voxel=delta_voxel, sharpness=sharpness)
 
 
 # ============================================================
@@ -73,7 +68,7 @@ nx = 256
 ny = 256
 nz = 256
 
-delta_voxel = 0.2
+
 
 plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     nx=nx,
@@ -84,12 +79,7 @@ plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
     rod_radius=2.5,
     rod_centers=((-6.0, 0.0), (6.0, 0.0)),
 )
-mj.slice_viewer(
-    plastic_mask,
-    metal_mask,
-    title='Cone Phantom Masks',
-    slice_label=['Plastic mask', 'Metal mask'],
-)
+# mj.slice_viewer(plastic_mask, metal_mask)
 
 mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
 mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
@@ -119,38 +109,62 @@ sino_bh = utilities.generate_polychromatic_sinogram(
     metal_mu_interpolations=[mu_metal_mm_interpolation],
     spectrum=spectrum,
 )
+utilities.save_sinogram_gif(sino_bh, "cone_sinogram.gif")
 
-mj.slice_viewer(
-    sino_bh,
-    title='Cone Beam-Hardened Sinogram',
-    slice_axis=0,
-)
-
-# ============================================================
-# 6. Optional monochromatic comparison
-# ============================================================
-
-# Select reference mono energy
-mono_energy_keV = mean_E
-print(f"Using mean-energy attenuation at {mono_energy_keV:.3f} keV for ground truth.")
-
-mono_line_integral = mu_plastic_eff * L_plastic + mu_metal_eff * L_metal
-sino_mono = mono_line_integral
+# mj.slice_viewer(sino_bh, slice_axis=1)
 
 
 # ============================================================
-# 7. Reconstruct with MBIRJAX and FDK
+# 6. Reconstruct with MBIRJAX and FDK
 # ============================================================
+
+weights_trans = ct_model.gen_weights(sino_bh, weight_type='transmission_root')
 
 FDK_bh = ct_model.direct_recon(sino_bh)
-recon_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=None)
+mbir_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=weights_trans)
 
-recon_mono, recon_dict_mono = ct_model.recon(sino_mono, weights=None)
-mj.slice_viewer(
-    ground_truth,
-    recon_mono,
-    FDK_bh,
-    recon_bh,
-    title='Cone Reconstruction Comparison',
-    slice_label=['Ground truth', 'Mono reference', 'FDK', 'MBIR'],
+# MAR parameters
+order = 3
+verbose = 1
+num_metal = 1
+alpha = 1
+beta = 0 # default is 0.002
+gamma = 0.1  # default is 0.1
+num_constraint_update_iter = 15
+
+recon_mar = mjp.recon_plastic_metal(
+    ct_model, sino=sino_bh, weights=weights_trans,
+    num_BH_iterations=3,
+    num_metal=num_metal,
+    num_constraint_update_iter=num_constraint_update_iter,
+    order=order,
+    verbose=1,
+    alpha=alpha,
+    beta=beta,
+    gamma=gamma
 )
+
+segment_plastic = False
+visualize_recon = True
+
+if segment_plastic:
+    plastic_mask_fdk, _, _, _ = mjp.segment_plastic_metal(FDK_bh, num_metal=num_metal)
+    plastic_mask_mbir, _, _, _  = mjp.segment_plastic_metal(mbir_bh, num_metal=num_metal)
+    plastic_mask_mar, _, _, _  = mjp.segment_plastic_metal(recon_mar, num_metal=num_metal)
+    mj.slice_viewer(
+        plastic_mask_fdk,
+        plastic_mask_mbir,
+        plastic_mask_mar,
+        title='Segmented Plastic Masks',
+        slice_label=['FDK plastic', 'MBIR plastic', 'MAR plastic'],
+    )
+
+if visualize_recon:
+    mj.slice_viewer(
+        ground_truth,
+        FDK_bh,
+        mbir_bh,
+        recon_mar,
+        title='Cone MAR Reconstruction Comparison',
+        slice_label=['Ground truth', 'FDK', 'MBIR', 'MAR'],
+    )

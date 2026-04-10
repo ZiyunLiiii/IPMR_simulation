@@ -174,6 +174,55 @@ def generate_cylinder_rod_phantom(
     return plastic_mask, metal_mask
 
 
+def generate_cylinder_ring_rod_phantom(
+    nx=256,
+    ny=256,
+    nz=256,
+    delta_voxel=0.2,
+    plastic_radius=20.0,
+    rod_ring_radius=12.0,
+    rod_radius=0.8,
+    num_rods=16,
+    angle_offset_deg=0.0,
+    dtype=np.float32,
+):
+    """
+    Generate a 3D phantom with one plastic cylinder and many thin metal rods
+    placed uniformly on a circular ring.
+
+    Returns:
+        plastic_mask: array of shape (nx, ny, nz)
+        metal_mask: array of shape (nx, ny, nz)
+    """
+
+    if num_rods < 1:
+        raise ValueError("num_rods must be at least 1.")
+    if rod_ring_radius + rod_radius > plastic_radius:
+        raise ValueError("All rods must fit inside the plastic cylinder.")
+
+    x = (np.arange(nx) - nx / 2 + 0.5) * delta_voxel
+    y = (np.arange(ny) - ny / 2 + 0.5) * delta_voxel
+    X, Y = np.meshgrid(x, y, indexing='ij')
+
+    plastic_mask_2d = (X ** 2 + Y ** 2) <= plastic_radius ** 2
+
+    angles_rad = np.linspace(0.0, 2.0 * np.pi, num_rods, endpoint=False)
+    angles_rad += np.deg2rad(angle_offset_deg)
+
+    metal_mask_2d = np.zeros((nx, ny), dtype=bool)
+    for angle in angles_rad:
+        cx = rod_ring_radius * np.cos(angle)
+        cy = rod_ring_radius * np.sin(angle)
+        metal_mask_2d |= ((X - cx) ** 2 + (Y - cy) ** 2) <= rod_radius ** 2
+
+    plastic_mask_2d &= ~metal_mask_2d
+
+    plastic_mask = np.broadcast_to(plastic_mask_2d[:, :, None], (nx, ny, nz)).astype(dtype).copy()
+    metal_mask = np.broadcast_to(metal_mask_2d[:, :, None], (nx, ny, nz)).astype(dtype).copy()
+
+    return plastic_mask, metal_mask
+
+
 def save_sinogram_gif(sinogram, output_path, duration_ms=40):
     """Save a cone-beam sinogram stack (views, rows, channels) as a GIF."""
     sino = np.asarray(sinogram, dtype=np.float32)

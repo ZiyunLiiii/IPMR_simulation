@@ -5,6 +5,7 @@ import yaml
 from pathlib import Path
 import utilities
 
+# This is a script that creates and reconstructs a single-metal, two-rod CBCT phantom with metal artifacts.
 
 # ============================================================
 # 1. Load YAML file that contains material specifications
