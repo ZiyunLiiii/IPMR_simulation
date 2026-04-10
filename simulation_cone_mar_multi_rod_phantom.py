@@ -70,16 +70,19 @@ nz = 256
 
 
 
-plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
+plastic_mask, metal_mask = utilities.generate_cylinder_ring_rod_phantom(
     nx=nx,
     ny=ny,
     nz=nz,
     delta_voxel=delta_voxel,
     plastic_radius=20.0,
-    rod_radius=2.5,
-    rod_centers=((-6.0, 0.0), (6.0, 0.0)),
+    rod_ring_radius=12.0,
+    rod_radius=1.2,
+    num_rods=16,
+    angle_offset_deg=0.0,
+    dtype=np.float32,
 )
-# mj.slice_viewer(plastic_mask, metal_mask)
+mj.slice_viewer(plastic_mask, metal_mask)
 
 mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
 mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
