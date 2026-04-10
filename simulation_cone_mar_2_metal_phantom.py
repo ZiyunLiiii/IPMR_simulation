@@ -16,23 +16,28 @@ repo_dir = Path(__file__).resolve().parent
 with open(repo_dir / "material_attenuation.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-metal_name = 'Al'
+metal_0_name = 'Al'
+metal_1_name = 'Cu'
 plastic_name = 'C2H4'
 tube_voltage = 90
 
 # NIST mass attenuation data in cm^2/g; density in g/cm^3
-E_metal_0, mu_over_rho_metal_0, rho_metal_0 = utilities.get_material(metal_name, config)
 E_plastic, mu_over_rho_plastic, rho_plastic = utilities.get_material(plastic_name, config)
+E_metal_0, mu_over_rho_metal_0, rho_metal_0 = utilities.get_material(metal_0_name, config)
+E_metal_1, mu_over_rho_metal_1, rho_metal_1 = utilities.get_material(metal_0_name, config)
 
 # Generate X-ray spectrum weighting
 energies_keV, spectrum, mean_E, std_E = utilities.gen_spectrum(tube_voltage, 'Al')
 
 # Convert to attenuation in mm^{-1}
 mu_plastic_mm = rho_plastic * mu_over_rho_plastic / 10.0
-mu_metal_mm = rho_metal_0 * mu_over_rho_metal_0 / 10.0
+mu_metal_0_mm = rho_metal_0 * mu_over_rho_metal_0 / 10.0
+mu_metal_1_mm = rho_metal_1 * mu_over_rho_metal_1 / 10.0
 
 mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
-mu_metal_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_mm, energies_keV)
+mu_metal_0_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_0_mm, energies_keV)
+mu_metal_1_mm_interpolation = utilities.align_energy_grid(E_metal_1, mu_metal_1_mm, energies_keV)
+
 
 # ============================================================
 # 2. Geometry
@@ -70,7 +75,7 @@ nz = 256
 
 
 
-plastic_mask, metal_mask = utilities.generate_cylinder_ring_rod_phantom(
+plastic_mask, metal_masks = utilities.generate_cylinder_ring_rod_two_metal_phantom(
     nx=nx,
     ny=ny,
     nz=nz,
@@ -78,15 +83,17 @@ plastic_mask, metal_mask = utilities.generate_cylinder_ring_rod_phantom(
     plastic_radius=20.0,
     rod_ring_radius=12.0,
     rod_radius=1.2,
-    num_rods=16,
     angle_offset_deg=0.0,
+    metal_labels=(metal_0_name, metal_1_name),
     dtype=np.float32,
 )
-mj.slice_viewer(plastic_mask, metal_mask)
+mj.slice_viewer(plastic_mask, *metal_masks)
 
 mu_plastic_eff = utilities.get_effective_attenuation(E_plastic, mu_plastic_mm, mean_E)
-mu_metal_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_mm, mean_E)
-ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
+mu_metal_0_eff = utilities.get_effective_attenuation(E_metal_0, mu_metal_0_mm, mean_E)
+mu_metal_1_eff = utilities.get_effective_attenuation(E_metal_1, mu_metal_1_mm, mean_E)
+
+ground_truth = mu_plastic_eff * plastic_mask + mu_metal_0_eff * metal_masks[0] + mu_metal_1_eff * metal_masks[1]
 
 # ============================================================
 # 4. Forward-project material path lengths
@@ -97,7 +104,7 @@ ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
 # ============================================================
 
 L_plastic = ct_model.forward_project(plastic_mask)   # shape (views, rows, channels)
-L_metal   = [ct_model.forward_project(metal_mask)]
+L_metal   = [ct_model.forward_project(metal_mask) for metal_mask in metal_masks]
 
 # mj.slice_viewer(L_plastic, L_metal)
 
@@ -109,7 +116,7 @@ sino_bh = utilities.generate_polychromatic_sinogram(
     plastic_path_length=L_plastic,
     mu_plastic_interpolation=mu_plastic_mm_interpolation,
     metal_path_lengths=L_metal,
-    metal_mu_interpolations=[mu_metal_mm_interpolation],
+    metal_mu_interpolations=[mu_metal_0_mm_interpolation],
     spectrum=spectrum,
 )
 utilities.save_sinogram_gif(sino_bh, "cone_sinogram.gif")
@@ -129,7 +136,7 @@ mbir_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=weights_trans)
 # MAR parameters
 order = 3
 verbose = 1
-num_metal = 1
+num_metal = 2
 alpha = 1
 beta = 0 # default is 0.002
 gamma = 0.1  # default is 0.1

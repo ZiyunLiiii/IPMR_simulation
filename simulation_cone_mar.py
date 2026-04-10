@@ -94,7 +94,7 @@ ground_truth = mu_plastic_eff * plastic_mask + mu_metal_eff * metal_mask
 # ============================================================
 
 L_plastic = ct_model.forward_project(plastic_mask)   # shape (views, rows, channels)
-L_metal   = ct_model.forward_project(metal_mask)
+L_metal   = [ct_model.forward_project(metal_mask)]
 
 # mj.slice_viewer(L_plastic, L_metal)
 
@@ -105,7 +105,7 @@ L_metal   = ct_model.forward_project(metal_mask)
 sino_bh = utilities.generate_polychromatic_sinogram(
     plastic_path_length=L_plastic,
     mu_plastic_interpolation=mu_plastic_mm_interpolation,
-    metal_path_lengths=[L_metal],
+    metal_path_lengths=L_metal,
     metal_mu_interpolations=[mu_metal_mm_interpolation],
     spectrum=spectrum,
 )
