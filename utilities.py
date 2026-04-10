@@ -181,7 +181,7 @@ def generate_cylinder_ring_rod_phantom(
     delta_voxel=0.2,
     plastic_radius=20.0,
     rod_ring_radius=12.0,
-    rod_radius=0.8,
+    rod_radius=1.2,
     num_rods=16,
     angle_offset_deg=0.0,
     dtype=np.float32,
@@ -221,6 +221,63 @@ def generate_cylinder_ring_rod_phantom(
     metal_mask = np.broadcast_to(metal_mask_2d[:, :, None], (nx, ny, nz)).astype(dtype).copy()
 
     return plastic_mask, metal_mask
+
+
+def generate_cylinder_ring_rod_two_metal_phantom(
+    nx=256,
+    ny=256,
+    nz=256,
+    delta_voxel=0.2,
+    plastic_radius=20.0,
+    rod_ring_radius=12.0,
+    rod_radius=1.2,
+    angle_offset_deg=0.0,
+    metal_labels=("metal_1", "metal_2"),
+    dtype=np.float32,
+):
+    """
+    Generate a 3D phantom with one plastic cylinder and 6 thin rods on a ring.
+    The rods alternate between two metal materials and are returned as a mask list.
+
+    Returns:
+        plastic_mask: array of shape (nx, ny, nz)
+        metal_mask_list: list of arrays, one mask per metal material
+    """
+
+    if len(metal_labels) != 2:
+        raise ValueError("metal_labels must contain exactly 2 entries.")
+    if rod_ring_radius + rod_radius > plastic_radius:
+        raise ValueError("All rods must fit inside the plastic cylinder.")
+
+    x = (np.arange(nx) - nx / 2 + 0.5) * delta_voxel
+    y = (np.arange(ny) - ny / 2 + 0.5) * delta_voxel
+    X, Y = np.meshgrid(x, y, indexing='ij')
+
+    plastic_mask_2d = (X ** 2 + Y ** 2) <= plastic_radius ** 2
+
+    angles_rad = np.linspace(0.0, 2.0 * np.pi, 6, endpoint=False)
+    angles_rad += np.deg2rad(angle_offset_deg)
+
+    metal_masks_2d = [np.zeros((nx, ny), dtype=bool) for _ in range(2)]
+    for rod_index, angle in enumerate(angles_rad):
+        cx = rod_ring_radius * np.cos(angle)
+        cy = rod_ring_radius * np.sin(angle)
+        mask = ((X - cx) ** 2 + (Y - cy) ** 2) <= rod_radius ** 2
+        metal_masks_2d[rod_index % 2] |= mask
+
+    combined_metal_mask_2d = np.zeros((nx, ny), dtype=bool)
+    for metal_mask_2d in metal_masks_2d:
+        combined_metal_mask_2d |= metal_mask_2d
+
+    plastic_mask_2d &= ~combined_metal_mask_2d
+
+    plastic_mask = np.broadcast_to(plastic_mask_2d[:, :, None], (nx, ny, nz)).astype(dtype).copy()
+    metal_mask_list = [
+        np.broadcast_to(metal_mask_2d[:, :, None], (nx, ny, nz)).astype(dtype).copy()
+        for metal_mask_2d in metal_masks_2d
+    ]
+
+    return plastic_mask, metal_mask_list
 
 
 def save_sinogram_gif(sinogram, output_path, duration_ms=40):
