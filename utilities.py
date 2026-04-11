@@ -34,17 +34,21 @@ def gen_spectrum(energy, filter_material, plot=False):
     print(f"Mean energy = {mean_E:.3f} keV")
     print(f"Std energy  = {std_E:.3f} keV")
     if plot:
-        plt.figure(figsize=(6,4))
-        plt.plot(energies, weights, linewidth=1.5)
+        fig, ax = plt.subplots(figsize=(4.5, 3.0), dpi=300)
+        ax.plot(energies, weights, lw=0.7, color='#4C72B0')
 
-        plt.xlabel('energy (keV)')
-        plt.ylabel('normalized weights')
-        plt.title('Normalized X-ray spectrum')
-        plt.xlim(0, 100)
-        plt.ylim(0, weights.max() * 1.1)
+        ax.set_xlabel('Energy (keV)')
+        ax.set_ylabel('Normalized weights')
 
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
+        ax.set_xlim(0, 100)
+        ax.set_ylim(0, weights.max() * 1.08)
+
+        ax.tick_params(direction='out', length=4, width=0.8)
+        for spine in ax.spines.values():
+            spine.set_linewidth(0.8)
+
+        ax.grid(False)
+        fig.tight_layout()
         plt.show()
     return energies, weights, mean_E, std_E
 
