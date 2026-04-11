@@ -37,7 +37,7 @@ mu_metal_1_mm = rho_metal_1 * mu_over_rho_metal_1 / 10.0
 mu_plastic_mm_interpolation = utilities.align_energy_grid(E_plastic, mu_plastic_mm, energies_keV)
 mu_metal_0_mm_interpolation = utilities.align_energy_grid(E_metal_0, mu_metal_0_mm, energies_keV)
 mu_metal_1_mm_interpolation = utilities.align_energy_grid(E_metal_1, mu_metal_1_mm, energies_keV)
-
+mu_metal_mm_interpolation = [mu_metal_0_mm_interpolation, mu_metal_1_mm_interpolation]
 
 # ============================================================
 # 2. Geometry
@@ -116,7 +116,7 @@ sino_bh = utilities.generate_polychromatic_sinogram(
     plastic_path_length=L_plastic,
     mu_plastic_interpolation=mu_plastic_mm_interpolation,
     metal_path_lengths=L_metal,
-    metal_mu_interpolations=[mu_metal_0_mm_interpolation],
+    metal_mu_interpolations=mu_metal_mm_interpolation,
     spectrum=spectrum,
 )
 utilities.save_sinogram_gif(sino_bh, "cone_sinogram.gif")
