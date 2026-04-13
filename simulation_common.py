@@ -40,63 +40,77 @@ def _prepare_material(material_name, config, energies_keV):
     }
 
 
-def create_cone_model(
-    num_views=360,
-    num_det_rows=256,
-    num_det_channels=256,
-    source_detector_dist=1024,
-    source_iso_dist=512,
-    delta_voxel=0.2,
-    sharpness=1.0,
-):
-    angles = np.linspace(0, 2 * np.pi, num_views, endpoint=False, dtype=np.float32)
-    sino_shape = (num_views, num_det_rows, num_det_channels)
-    ct_model = mj.ConeBeamModel(sino_shape, angles, source_detector_dist, source_iso_dist)
-    ct_model.set_params(delta_voxel=delta_voxel, sharpness=sharpness)
+def create_cone_model(ct_model_config):
+    angles = np.linspace(
+        0,
+        2 * np.pi,
+        ct_model_config["num_views"],
+        endpoint=False,
+        dtype=np.float32,
+    )
+    sino_shape = (
+        ct_model_config["num_views"],
+        ct_model_config["num_det_rows"],
+        ct_model_config["num_det_channels"],
+    )
+    ct_model = mj.ConeBeamModel(
+        sino_shape,
+        angles,
+        ct_model_config["source_detector_dist"],
+        ct_model_config["source_iso_dist"],
+    )
+    ct_model.set_params(
+        delta_voxel=ct_model_config["delta_voxel"],
+        sharpness=ct_model_config["sharpness"],
+    )
     return ct_model
 
 
-def build_single_metal_phantom(phantom_name, nx, ny, nz, delta_voxel):
+def build_single_metal_phantom(phantom_config, delta_voxel):
+    phantom_name = phantom_config["phantom_name"]
+
     if phantom_name == "two_rods":
         plastic_mask, metal_mask = utilities.generate_cylinder_rod_phantom(
-            nx=nx,
-            ny=ny,
-            nz=nz,
+            nx=phantom_config["nx"],
+            ny=phantom_config["ny"],
+            nz=phantom_config["nz"],
             delta_voxel=delta_voxel,
-            plastic_radius=20.0,
-            rod_radius=2.5,
-            rod_centers=((-6.0, 0.0), (6.0, 0.0)),
+            plastic_radius=phantom_config["plastic_radius"],
+            rod_radius=phantom_config["rod_radius"],
+            rod_centers=phantom_config["rod_centers"],
         )
         return plastic_mask, [metal_mask]
 
     if phantom_name == "ring_rods":
         plastic_mask, metal_mask = utilities.generate_cylinder_ring_rod_phantom(
-            nx=nx,
-            ny=ny,
-            nz=nz,
+            nx=phantom_config["nx"],
+            ny=phantom_config["ny"],
+            nz=phantom_config["nz"],
             delta_voxel=delta_voxel,
-            plastic_radius=20.0,
-            rod_ring_radius=12.0,
-            rod_radius=1.2,
-            num_rods=16,
-            angle_offset_deg=0.0,
+            plastic_radius=phantom_config["plastic_radius"],
+            rod_ring_radius=phantom_config["rod_ring_radius"],
+            rod_radius=phantom_config["rod_radius"],
+            num_rods=phantom_config["num_rods"],
+            angle_offset_deg=phantom_config["angle_offset_deg"],
         )
         return plastic_mask, [metal_mask]
 
     raise ValueError(f"Unsupported single-metal phantom: {phantom_name}")
 
 
-def build_two_metal_phantom(phantom_name, nx, ny, nz, delta_voxel):
+def build_two_metal_phantom(phantom_config, delta_voxel):
+    phantom_name = phantom_config["phantom_name"]
+
     if phantom_name == "six_rods":
         return utilities.generate_cylinder_ring_rod_two_metal_phantom(
-            nx=nx,
-            ny=ny,
-            nz=nz,
+            nx=phantom_config["nx"],
+            ny=phantom_config["ny"],
+            nz=phantom_config["nz"],
             delta_voxel=delta_voxel,
-            plastic_radius=20.0,
-            rod_ring_radius=12.0,
-            rod_radius=0.8,
-            angle_offset_deg=0.0,
+            plastic_radius=phantom_config["plastic_radius"],
+            rod_ring_radius=phantom_config["rod_ring_radius"],
+            rod_radius=phantom_config["rod_radius"],
+            angle_offset_deg=phantom_config["angle_offset_deg"],
         )
 
     raise ValueError(f"Unsupported two-metal phantom: {phantom_name}")
@@ -119,30 +133,28 @@ def build_mono_reference_volume(plastic_mask, metal_mask_list, plastic_material,
 
 def run_cone_metal_simulation(
     *,
-    plastic_name,
-    metal_names,
-    phantom_name,
+    material_config,
+    phantom_config,
+    ct_model_config,
+    recon_config,
+    output_config,
     is_two_metal,
-    tube_voltage=90,
-    filter_material="Al",
-    delta_voxel=0.2,
-    nx=256,
-    ny=256,
-    nz=256,
-    sharpness=1.0,
-    save_sinogram_path="cone_sinogram.gif",
-    visualize_masks=False,
-    visualize_recon=True,
 ):
-    material_setup = load_material_setup(plastic_name, metal_names, tube_voltage, filter_material)
-    ct_model = create_cone_model(delta_voxel=delta_voxel, sharpness=sharpness)
+    material_setup = load_material_setup(
+        material_config["plastic_name"],
+        material_config["metal_names"],
+        material_config["tube_voltage"],
+        material_config["filter_material"],
+    )
+    ct_model = create_cone_model(ct_model_config)
+    delta_voxel = ct_model_config["delta_voxel"]
 
     if is_two_metal:
-        plastic_mask, metal_mask_list = build_two_metal_phantom(phantom_name, nx, ny, nz, delta_voxel)
+        plastic_mask, metal_mask_list = build_two_metal_phantom(phantom_config, delta_voxel)
     else:
-        plastic_mask, metal_mask_list = build_single_metal_phantom(phantom_name, nx, ny, nz, delta_voxel)
+        plastic_mask, metal_mask_list = build_single_metal_phantom(phantom_config, delta_voxel)
 
-    if visualize_masks:
+    if output_config["visualize_masks"]:
         mj.slice_viewer(plastic_mask, *metal_mask_list, title="Phantom Masks")
 
     mono_energy_keV = material_setup["mean_E"]
@@ -164,10 +176,10 @@ def run_cone_metal_simulation(
         metal_mu_interpolations=[metal["mu_interp"] for metal in material_setup["metals"]],
         spectrum=material_setup["spectrum"],
     )
-    if save_sinogram_path:
-        utilities.save_sinogram_gif(sino_bh, save_sinogram_path)
+    if output_config["save_sinogram_path"]:
+        utilities.save_sinogram_gif(sino_bh, output_config["save_sinogram_path"])
 
-    weights_trans = ct_model.gen_weights(sino_bh, weight_type="transmission_root")
+    weights_trans = ct_model.gen_weights(sino_bh, weight_type=recon_config["weight_type"])
     fdk_bh = ct_model.direct_recon(sino_bh)
     mbir_bh, recon_dict_bh = ct_model.recon(sino_bh, weights=weights_trans)
 
@@ -175,17 +187,17 @@ def run_cone_metal_simulation(
         ct_model,
         sino=sino_bh,
         weights=weights_trans,
-        num_BH_iterations=3,
-        num_metal=len(metal_names),
-        num_constraint_update_iter=15,
-        order=3,
-        verbose=1,
-        alpha=1,
-        beta=0,
-        gamma=0.1,
+        num_BH_iterations=recon_config["num_BH_iterations"],
+        num_metal=len(material_config["metal_names"]),
+        num_constraint_update_iter=recon_config["num_constraint_update_iter"],
+        order=recon_config["order"],
+        verbose=recon_config["verbose"],
+        alpha=recon_config["alpha"],
+        beta=recon_config["beta"],
+        gamma=recon_config["gamma"],
     )
 
-    if visualize_recon:
+    if output_config["visualize_recon"]:
         mj.slice_viewer(
             mono_reference_volume,
             fdk_bh,
