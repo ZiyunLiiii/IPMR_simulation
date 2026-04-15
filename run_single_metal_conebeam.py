@@ -37,6 +37,7 @@ RECON_CONFIG = {
     "weight_type": "transmission_root",
     "num_BH_iterations": 3,
     "num_constraint_update_iter": 15,
+    "num_metal": 1,
     "order": 3,
     "verbose": 1,
     "alpha": 1,
