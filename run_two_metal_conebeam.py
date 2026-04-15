@@ -33,6 +33,7 @@ RECON_CONFIG = {
     "weight_type": "transmission_root",
     "num_BH_iterations": 3,
     "num_constraint_update_iter": 15,
+    "num_metal": 2,
     "order": 3,
     "verbose": 1,
     "alpha": 1,
@@ -54,5 +55,4 @@ if __name__ == "__main__":
         ct_model_config=CT_MODEL_CONFIG,
         recon_config=RECON_CONFIG,
         output_config=OUTPUT_CONFIG,
-        is_two_metal=True,
     )

@@ -138,7 +138,6 @@ def run_cone_metal_simulation(
     ct_model_config,
     recon_config,
     output_config,
-    is_two_metal,
 ):
     material_setup = load_material_setup(
         material_config["plastic_name"],
@@ -149,10 +148,7 @@ def run_cone_metal_simulation(
     ct_model = create_cone_model(ct_model_config)
     delta_voxel = ct_model_config["delta_voxel"]
 
-    if is_two_metal:
-        plastic_mask, metal_mask_list = build_two_metal_phantom(phantom_config, delta_voxel)
-    else:
-        plastic_mask, metal_mask_list = build_single_metal_phantom(phantom_config, delta_voxel)
+    plastic_mask, metal_mask_list = build_two_metal_phantom(phantom_config, delta_voxel)
 
     if output_config["visualize_masks"]:
         mj.slice_viewer(plastic_mask, *metal_mask_list, title="Phantom Masks")
@@ -188,7 +184,7 @@ def run_cone_metal_simulation(
         sino=sino_bh,
         weights=weights_trans,
         num_BH_iterations=recon_config["num_BH_iterations"],
-        num_metal=len(material_config["metal_names"]),
+        num_metal=recon_config["num_metal"],
         num_constraint_update_iter=recon_config["num_constraint_update_iter"],
         order=recon_config["order"],
         verbose=recon_config["verbose"],
