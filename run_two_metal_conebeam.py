@@ -17,7 +17,7 @@ PHANTOM_CONFIG = {
     "nz": 256,
     "plastic_radius": 20.0,
     "rod_ring_radius": 12.0,
-    "rod_radius": 0.8,
+    "rod_radius": 2,
     "angle_offset_deg": 0.0,
 }
 
@@ -39,7 +39,7 @@ RECON_CONFIG = {
     "order": 3,
     "verbose": 1,
     "alpha": 1,
-    "beta": 0,
+    "beta": 0.002,
     "gamma": 0.1,
 }
 

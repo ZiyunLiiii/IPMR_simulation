@@ -40,7 +40,7 @@ RECON_CONFIG = {
     "order": 3,
     "verbose": 1,
     "alpha": 1,
-    "beta": 0,
+    "beta": 0.002,
     "gamma": 0.1,
 }
 
