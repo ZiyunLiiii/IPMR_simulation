@@ -1,3 +1,5 @@
+import numpy as np
+import os
 from simulation_common import run_cone_metal_simulation
 
 
@@ -49,10 +51,23 @@ OUTPUT_CONFIG = {
 
 
 if __name__ == "__main__":
-    run_cone_metal_simulation(
+    simulation_results = run_cone_metal_simulation(
         material_config=MATERIAL_CONFIG,
         phantom_config=PHANTOM_CONFIG,
         ct_model_config=CT_MODEL_CONFIG,
         recon_config=RECON_CONFIG,
         output_config=OUTPUT_CONFIG,
+        is_two_metal=True
     )
+
+    fdk_bh = simulation_results['fdk_bh']
+    mbir_bh = simulation_results['mbir_bh']
+    recon_mar = simulation_results['recon_mar']
+
+    base_dir = ''
+    save_dir = base_dir + f"{PHANTOM_CONFIG['phantom_name']}"
+    os.makedirs(save_dir, exist_ok=True)
+
+    np.save(save_dir + 'fdk_bh.npy', fdk_bh)
+    np.save(save_dir + 'mbir_bh.npy', mbir_bh)
+    np.save(save_dir + 'recon_mar.npy', recon_mar)
