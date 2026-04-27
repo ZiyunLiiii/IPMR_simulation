@@ -5,7 +5,7 @@ from simulation_common import run_cone_metal_simulation
 
 MATERIAL_CONFIG = {
     "plastic_name": "C2H4",
-    "metal_names": ["Al", "Cu"],
+    "metal_names": ["Ti", "Cu"],
     "tube_voltage": 90,
     "filter_material": "Al",
 }
@@ -17,7 +17,7 @@ PHANTOM_CONFIG = {
     "nz": 256,
     "plastic_radius": 20.0,
     "rod_ring_radius": 12.0,
-    "rod_radius": 2,
+    "rod_radius": 1,
     "angle_offset_deg": 0.0,
 }
 
@@ -36,7 +36,7 @@ RECON_CONFIG = {
     "num_BH_iterations": 3,
     "num_constraint_update_iter": 15,
     "num_metal": 2,
-    "order": 3,
+    "order": 2,
     "verbose": 1,
     "alpha": 1,
     "beta": 0.002,
