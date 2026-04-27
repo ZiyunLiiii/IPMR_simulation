@@ -62,6 +62,7 @@ if __name__ == "__main__":
         is_two_metal=False
     )
 
+    gdt = simulation_results['mono_reference_volume']
     fdk_bh = simulation_results['fdk_bh']
     mbir_bh = simulation_results['mbir_bh']
     recon_mar = simulation_results['recon_mar']
