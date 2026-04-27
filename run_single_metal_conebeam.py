@@ -68,11 +68,10 @@ if __name__ == "__main__":
     recon_mar = simulation_results['recon_mar']
 
     base_dir = ''
-    save_dir = base_dir + f"{PHANTOM_CONFIG['phantom_name']}"
+    save_dir = os.path.join(base_dir, PHANTOM_CONFIG['phantom_name'])
     os.makedirs(save_dir, exist_ok=True)
 
-    np.save(save_dir + 'fdk_bh.npy', fdk_bh)
-    np.save(save_dir + 'mbir_bh.npy', mbir_bh)
-    np.save(save_dir + 'recon_mar.npy', recon_mar)
-
+    np.save(os.path.join(save_dir, 'fdk_bh.npy'), fdk_bh)
+    np.save(os.path.join(save_dir, 'mbir_bh.npy'), mbir_bh)
+    np.save(os.path.join(save_dir, 'recon_mar.npy'), recon_mar)
 
