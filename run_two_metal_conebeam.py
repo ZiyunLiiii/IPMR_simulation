@@ -69,6 +69,7 @@ if __name__ == "__main__":
     save_dir = os.path.join(base_dir, PHANTOM_CONFIG['phantom_name'])
     os.makedirs(save_dir, exist_ok=True)
 
+    np.save(os.path.join(save_dir, 'gdt.npy'), gdt)
     np.save(os.path.join(save_dir, 'fdk_bh.npy'), fdk_bh)
     np.save(os.path.join(save_dir, 'mbir_bh.npy'), mbir_bh)
     np.save(os.path.join(save_dir, 'recon_mar.npy'), recon_mar)
